@@ -1,4 +1,11 @@
-[![Build Status](https://travis-ci.org/simplesteph/kafka-stack-docker-compose.svg?branch=master)](https://travis-ci.org/simplesteph/kafka-stack-docker-compose)
+[![Actions Status](https://github.com/conduktor/kafka-stack-docker-compose/workflows/CI/badge.svg)](https://github.com/conduktor/kafka-stack-docker-compose/actions)
+
+# An open-source project by   [![Conduktor.io](https://www.conduktor.io/uploads/conduktor.svg)](https://conduktor.io/)
+
+This project is sponsored by [Conduktor.io](https://www.conduktor.io/), a graphical desktop user interface for Apache Kafka. 
+
+Once you have started your cluster, you can use Conduktor to easily manage it. 
+Just connect against `localhost:9092` if using Docker, or `192.168.99.100` if using Docker Toolbox
 
 # kafka-stack-docker-compose
 
@@ -16,14 +23,9 @@ This replicates as well as possible real deployment configurations, where you ha
   - Kafka Topics UI: 0.9.4
   - Kafka Connect: Confluent 5.5.1
   - Kafka Connect UI: 0.9.7
-  - ksqlDB Server: Confluent 5.5.1
+  - ksqlDB Server: Confluent 6.1.1
   - Zoonavigator: 0.8.0
 
-
-## Optional: Kafka Desktop Application
-
-Once you have started your cluster, you can use [Conduktor](https://www.conduktor.io/) to easily manage it. 
-Just connect against `localhost:9092` if using Docker, or `192.168.99.100` if using Docker Toolbox
 
 # Requirements
 
@@ -50,7 +52,7 @@ This configuration fits most development requirements.
 
  - Zookeeper will be available at `$DOCKER_HOST_IP:2181`
  - Kafka will be available at `$DOCKER_HOST_IP:9092`
-
+ - (experimental) JMX port at `$DOCKER_HOST_IP:9999`
 
 Run with:
 ```
@@ -78,6 +80,7 @@ If you want to have three zookeeper nodes and experiment with zookeeper fault-to
 
 - Zookeeper will be available at `$DOCKER_HOST_IP:2181,$DOCKER_HOST_IP:2182,$DOCKER_HOST_IP:2183`
 - Kafka will be available at `$DOCKER_HOST_IP:9092`
+- (experimental) JMX port at `$DOCKER_HOST_IP:9999`
 
 Run with:
 ```
@@ -99,8 +102,28 @@ docker-compose -f zk-multiple-kafka-multiple.yml up
 docker-compose -f zk-multiple-kafka-multiple.yml down
 ```
 
+## Full stack (no UI)
+
+For this, we recommend using [Conduktor](https://conduktor.io) as your tool to bring a unified UI to all these components
+
+ - Single Zookeeper: `$DOCKER_HOST_IP:2181`
+ - Single Kafka: `$DOCKER_HOST_IP:9092`
+ - Kafka Schema Registry: `$DOCKER_HOST_IP:8081`
+ - Kafka Rest Proxy: `$DOCKER_HOST_IP:8082`
+ - Kafka Connect: `$DOCKER_HOST_IP:8083`
+ - KSQL Server: `$DOCKER_HOST_IP:8088`
+ - Zoonavigator Web: `$DOCKER_HOST_IP:8004`
+- (experimental) JMX port at `$DOCKER_HOST_IP:9999`
+
+ Run with:
+ ```
+ docker-compose -f full-stack-no-ui.yml up
+ docker-compose -f full-stack-no-ui.yml down
+ ```
 
 ## Full stack
+
+Note: the UI may be outdated or not maintained. See above for Full Stack No UI in combination with [Conduktor](https://conduktor.io)
 
  - Single Zookeeper: `$DOCKER_HOST_IP:2181`
  - Single Kafka: `$DOCKER_HOST_IP:9092`
@@ -112,7 +135,7 @@ docker-compose -f zk-multiple-kafka-multiple.yml down
  - Kafka Connect UI: `$DOCKER_HOST_IP:8003`
  - KSQL Server: `$DOCKER_HOST_IP:8088`
  - Zoonavigator Web: `$DOCKER_HOST_IP:8004`
-
+- (experimental) JMX port at `$DOCKER_HOST_IP:9999`
 
  Run with:
  ```
@@ -173,4 +196,18 @@ A: yes. This is for testing only!!! Reduce the KAFKA_LOG_SEGMENT_BYTES to 16MB a
       # For testing small segments 16MB and retention of 128MB
       KAFKA_LOG_SEGMENT_BYTES: 16777216
       KAFKA_LOG_RETENTION_BYTES: 134217728
+```
+
+**Q: How do I expose kafka?**
+
+A: If you want to expose kafka outside of your local machine, you must set `KAFKA_ADVERTISED_LISTENERS` to the IP of the machine so that kafka is externally accessible. To achieve this you can set `LISTENER_DOCKER_EXTERNAL` to the IP of the machine.
+For example, if the IP of your machine is `50.10.2.3`, follow the sample mapping below:
+
+```
+  kafka1:
+    image: confluentinc/cp-kafka:5.5.1
+    ...
+    environment:
+      ...
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka2:19093,LISTENER_DOCKER_EXTERNAL://50.10.2.3:9093
 ```
